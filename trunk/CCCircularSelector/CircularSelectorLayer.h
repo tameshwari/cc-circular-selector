@@ -2,8 +2,8 @@
 //  CircularSelectorLayer.h
 //  PuzzlePack
 //
-//  Created by Manna01 on 10年9月10日.
-//  Copyright 2010 Manna Soft. All rights reserved.
+//  Created by Tang Eric on 05/03/2011.
+//  Copyright __MyCompanyName__ 2011. All rights reserved.
 //
 
 #define MAX_ANGULAR_VELOCITY    360.0f*2.5f
@@ -21,8 +21,6 @@ typedef enum{
 
 @protocol CircularSelectorDelagateProtocol
 
--(void)dragBegan:(CircularSelectorLayer*)circularSelector;
--(void)dragEnded:(CircularSelectorLayer*)circularSelector;
 -(void)rotationBegan:(CircularSelectorLayer*)circularSelector;
 -(void)rotationEnded:(CircularSelectorLayer*)circularSelector;
 -(void)selectionDidChange:(int)index circularSelector:(CircularSelectorLayer*)circularSelector;
@@ -33,16 +31,16 @@ typedef enum{
 
 @interface CircularSelectorLayer : CCLayer {
     NSObject<CircularSelectorDelagateProtocol> *delegate_;
-    CGSize size_;
+    CGPoint center_;
     BOOL isDragging_;
     int selectionIndex_;
     NSArray *choices_;
     float angle_;
     float frontScale_, backScale_;
-    float frontY_, backY_;
-    float maxX_;
+    float radiusX_, radiusY_;
     float rotationSpeedFactor_; // this factor affect the rate between drag distance and rotation angle
     
+    // inertia related
     float dTheta_;
     float dThetaThreshold_;
     float deceleration_;
@@ -62,7 +60,7 @@ typedef enum{
 -(CircularSelectorLayer*)initWithChoices:(NSArray*)someChoices;
 -(void)positionChoices;
 -(float)getAngleForChoice:(int)index;
--(CGPoint)getXZCoordinatesWithAngle:(float)theta;
+-(CGPoint)getNormalizedXZCoordinatesWithAngle:(float)theta;
 -(float)getTFromZ:(float)z;
 -(float)getScaleFromT:(float)t;
 -(float)getYFromT:(float)t;
@@ -78,9 +76,9 @@ typedef enum{
 @property (readonly) int selectionIndex;
 @property (readonly) NSArray *choices;
 
+@property (readwrite) CGPoint center;
+
 @property (readwrite) float frontScale, backScale;
-@property (readwrite) float frontY, backY;
-@property (readwrite) float maxX;
 
 @property (assign) BOOL allowConfirmSelectByTap, allowRotateByTappingChoice, allowRotateByTappingSpace;
 

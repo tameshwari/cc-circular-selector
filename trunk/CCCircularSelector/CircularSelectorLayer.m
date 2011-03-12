@@ -2,8 +2,8 @@
 //  CircularSelectorLayer.m
 //  PuzzlePack
 //
-//  Created by Manna01 on 10年9月10日.
-//  Copyright 2010 Manna Soft. All rights reserved.
+//  Created by Tang Eric on 05/03/2011.
+//  Copyright __MyCompanyName__ 2011. All rights reserved.
 //
 
 #import "CircularSelectorLayer.h"
@@ -22,10 +22,10 @@ float radianToDegree(float radian){
 @synthesize selectionIndex=selectionIndex_;
 @synthesize choices=choices_;
 
+@synthesize center=center_;
+
 // property with explicit setters
 @synthesize frontScale=frontScale_, backScale=backScale_;
-@synthesize frontY=frontY_, backY=backY_;
-@synthesize maxX=maxX_;
 
 @synthesize allowConfirmSelectByTap, allowRotateByTappingChoice, allowRotateByTappingSpace;
 
@@ -56,26 +56,20 @@ float radianToDegree(float radian){
         }
         choices_ = [[NSArray alloc] initWithArray:tempChoices];
         
+        isDragging_ = NO;
+        selectionIndex_ = 0;
+        angle_ = 0.0f;
+        rotationSpeedFactor_ = 0.3f;
         
         allowConfirmSelectByTap = YES;
         allowRotateByTappingChoice = YES;
         allowRotateByTappingSpace = YES;
         
-        size_ = self.contentSize;
-        isDragging_ = NO;
-        selectionIndex_ = 0;
-        
-        angle_ = 0.0f;
-        
+        center_ = CGPointZero;
+        radiusX_ = self.contentSize.width * 0.35f;
+        radiusY_ = self.contentSize.height * 0.25f;
         frontScale_ = 1.0f;
         backScale_ = 0.6f;
-        
-        frontY_ = 0.4f;
-        backY_ = 0.7f;
-        
-        maxX_ = 0.7f;
-        
-        rotationSpeedFactor_ = 0.3f;
         
         // inertia
         dTheta_ = 0.0f;
@@ -119,8 +113,8 @@ float radianToDegree(float radian){
     for (i = 0; i < choices_.count; i++) {
         inserted = NO;
         for (j = 0; j < sortedChoices.count; j++) {
-            z1 = [self getXZCoordinatesWithAngle:[self getAngleForChoice:i]].y;
-            z2 = [self getXZCoordinatesWithAngle:[self getAngleForChoice:[[sortedChoices objectAtIndex:j] intValue]]].y;
+            z1 = [self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:i]].y;
+            z2 = [self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:[[sortedChoices objectAtIndex:j] intValue]]].y;
             if (z1 < z2) {
                 [sortedChoices insertObject:[NSNumber numberWithInt:i] atIndex:j];
                 inserted = YES;
@@ -141,11 +135,11 @@ float radianToDegree(float radian){
     float t;
     int i, j;
     for (i = 0; i < choices_.count; i++) {
-        xzPoint = [self getXZCoordinatesWithAngle:[self getAngleForChoice:i]];
+        xzPoint = [self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:i]];
         t = [self getTFromZ:xzPoint.y];
         choice = [choices_ objectAtIndex:i];
         choice.anchorPoint = ccp(0.5f, 0.5f);
-        choice.position = ccp(xzPoint.x * maxX_ * size_.width/2.0f + size_.width/2.0f, [self getYFromT:t]*size_.height);
+        choice.position = ccp(center_.x + xzPoint.x*radiusX_, center_.y - xzPoint.y*radiusY_);
         choice.scale = [self getScaleFromT:t];
     }
     
@@ -153,7 +147,7 @@ float radianToDegree(float radian){
     sortedChoices = [self getSortedChoices];
     j = 0;
     for (i = 0; i < sortedChoices.count; i++) { // count the nodes with negative Z
-        if ([self getXZCoordinatesWithAngle:[self getAngleForChoice:i]].y > 0) {
+        if ([self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:i]].y > 0) {
             j++;
         }
     }
@@ -173,9 +167,9 @@ float radianToDegree(float radian){
     return angle_+(360.0f*index/choices_.count);
 }
 
--(CGPoint)getXZCoordinatesWithAngle:(float)theta{
+-(CGPoint)getNormalizedXZCoordinatesWithAngle:(float)theta{
     // this method return x and z coordinates of the node
-    return CGPointMake(sin((double)degreeToRadian(theta)), cos((double)degreeToRadian(theta)));
+    return CGPointMake(sinf(degreeToRadian(theta)), cosf(degreeToRadian(theta)));
 }
 
 -(float)getTFromZ:(float)z{
@@ -190,10 +184,11 @@ float radianToDegree(float radian){
 }
 
 -(float)getYFromT:(float)t{
-    return t*frontY_ + (1.0f-t)*backY_;
+    return center_.y+radiusY_ - radiusY_*t;
 }
 
 -(float)correctAngle:(float)angle{
+    // keep the angle in 0 <= x < 360 range
     while (angle >= 360.0f) {
         angle -= 360.0f;
     }
@@ -309,7 +304,7 @@ float radianToDegree(float radian){
 
 - (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event
 {
-    if (CGRectContainsPoint(CGRectMake(0.0f, 0.0f, size_.width, size_.height), [self convertTouchToNodeSpace:touch])) {
+    if (YES){ //CGRectContainsPoint(CGRectMake(0.0f, 0.0f, size_.width, size_.height), [self convertTouchToNodeSpace:touch])) {
         // this touch is on this layer
         [self stopInertia];
         lastAngle_ = angle_;
@@ -422,19 +417,13 @@ float radianToDegree(float radian){
     [self positionChoices];
 }
 
--(void)setFrontY:(float)newFrontY{
-    frontY_ = newFrontY;
+-(void)setradiusX:(float)newRadiusX{
+    radiusX_ = newRadiusX;
     [self positionChoices];
 }
 
--(void)setBackY:(float)newBackY{
-    backY_ = newBackY;
+-(void)setRadiusY:(float)newRadiusY{
+    radiusY_ = newRadiusY;
     [self positionChoices];
 }
-
--(void)setMaxX:(float)newMaxX{
-    maxX_ = newMaxX;
-    [self positionChoices];
-}
-
 @end
