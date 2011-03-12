@@ -23,6 +23,7 @@ float radianToDegree(float radian){
 @synthesize choices=choices_;
 
 @synthesize rotationMode=rotationMode_;
+@synthesize touchArea=touchArea_;
 
 @synthesize center=center_;
 
@@ -37,6 +38,7 @@ float radianToDegree(float radian){
 }
 
 -(CCCircularSelector*)initWithChoices:(NSArray*)someChoices{
+    CGSize winSize = [[CCDirector sharedDirector] winSize];
     CCNode *tempNode;
     NSMutableArray *tempChoices = [NSMutableArray arrayWithCapacity:0];
     id tempChoice;
@@ -68,6 +70,7 @@ float radianToDegree(float radian){
         rotationSpeedFactor_ = 0.3f;
         
         rotationMode_ = kCCCircularSelectorRotationModeDrag | kCCCircularSelectorRotationModeTapItem | kCCCircularSelectorRotationModeTapLeftRight;
+        touchArea_ = CGRectMake(0.0f, 0.0f, winSize.width, winSize.height);
         
         center_ = CGPointZero;
         radiusX_ = self.contentSize.width * 0.35f;
@@ -308,8 +311,8 @@ float radianToDegree(float radian){
 
 - (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event
 {
-    if (YES){
-        // this touch is on this layer
+    if (CGRectContainsPoint(touchArea_, [self convertToWorldSpace:[self convertTouchToNodeSpace:touch]])){
+        // this touch in touchArea
         [self stopInertia];
         lastAngle_ = angle_;
         lastAngleTime_ = [[NSDate date] timeIntervalSince1970];

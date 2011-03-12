@@ -47,6 +47,7 @@ typedef enum{
     float rotationSpeedFactor_; // this factor affect the rate between drag distance and rotation angle
     
     CCCircularSelectorRotationMode rotationMode_;
+    CGRect touchArea_; // only accept touch within this area, this area is in world space
     
     // inertia related
     float dTheta_;
@@ -83,6 +84,7 @@ typedef enum{
 @property (readonly) NSArray *choices;
 
 @property (readwrite) CCCircularSelectorRotationMode rotationMode;
+@property (readwrite) CGRect touchArea;
 
 @property (readwrite) CGPoint center;
 @property (readwrite) float frontScale, backScale;
