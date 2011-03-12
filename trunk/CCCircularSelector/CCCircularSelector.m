@@ -351,7 +351,6 @@ float radianToDegree(float radian){
         }
         
         angle_ = [self correctAngle:angle_];
-NSLog(@"angle: %f", angle_);
         [self positionChoices];
         lastAngle_ = angle_;
         lastAngleTime_ = currentTime;
