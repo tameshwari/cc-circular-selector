@@ -1,12 +1,12 @@
 //
-//  CircularSelectorLayer.m
+//  CCCircularSelector.m
 //  PuzzlePack
 //
 //  Created by Tang Eric on 05/03/2011.
 //  Copyright __MyCompanyName__ 2011. All rights reserved.
 //
 
-#import "CircularSelectorLayer.h"
+#import "CCCircularSelector.h"
 
 float degreeToRadian(float degree){
     return degree/180.0f*M_PI;
@@ -16,7 +16,7 @@ float radianToDegree(float radian){
     return radian/M_PI*180.0f;
 }
 
-@implementation CircularSelectorLayer
+@implementation CCCircularSelector
 
 @synthesize delegate=delegate_;
 @synthesize selectionIndex=selectionIndex_;
@@ -32,11 +32,11 @@ float radianToDegree(float radian){
 @synthesize deceleration=deceleration_;
 @synthesize decelerationMode=decelerationMode_;
 
-+(CircularSelectorLayer*)layerWithChoices:(NSArray*)someChoices{
-    return [[[CircularSelectorLayer alloc] initWithChoices:someChoices] autorelease];
++(CCCircularSelector*)layerWithChoices:(NSArray*)someChoices{
+    return [[[CCCircularSelector alloc] initWithChoices:someChoices] autorelease];
 }
 
--(CircularSelectorLayer*)initWithChoices:(NSArray*)someChoices{
+-(CCCircularSelector*)initWithChoices:(NSArray*)someChoices{
     CCNode *tempNode;
     NSMutableArray *tempChoices = [NSMutableArray arrayWithCapacity:0];
     if (self = [super init]) {
@@ -51,7 +51,7 @@ float radianToDegree(float radian){
             }
         }
         if (tempChoices.count < 1) {
-            NSLog(@"[CircularSelectorLayer initWithChoices] at least one choice should be provided");
+            NSLog(@"[CCCircularSelector initWithChoices] at least one choice should be provided");
             return nil;
         }
         choices_ = [[NSArray alloc] initWithArray:tempChoices];
@@ -199,8 +199,8 @@ float radianToDegree(float radian){
 }
 
 -(void)decelerate:(ccTime)dt{
-    //NSLog(@"[CircularSelectorLayer decelerate:] dt: %f", dt);
-    //NSLog(@"[CircularSelectorLayer decelerate:] deceleration: %f, dt: %f, dTheta: %f, ", deceleration_, dt, dTheta_);
+    //NSLog(@"[CCCircularSelector decelerate:] dt: %f", dt);
+    //NSLog(@"[CCCircularSelector decelerate:] deceleration: %f, dt: %f, dTheta: %f, ", deceleration_, dt, dTheta_);
     if (dt > 0.0f) {
         if (decelerationMode_ == kCCCircularSelectorDecelerationModeLinear) {
             if (deceleration_ > 0.0f) {
@@ -241,7 +241,7 @@ float radianToDegree(float radian){
 }
 
 -(void)rotateToTargetAngle:(ccTime)dt{
-    //NSLog(@"[CircularSelectorLayer rotateToTargetAngle:] dt: %f, targetAngle: %f, angle: %f, threshold*dt: %f", dt, targetAngle_, angle_, dThetaThreshold_*dt);
+    //NSLog(@"[CCCircularSelector rotateToTargetAngle:] dt: %f, targetAngle: %f, angle: %f, threshold*dt: %f", dt, targetAngle_, angle_, dThetaThreshold_*dt);
     targetAngle_ = [self correctAngle:targetAngle_];
     if (targetAngle_>angle_) {
         if (targetAngle_<angle_+180.0f) {

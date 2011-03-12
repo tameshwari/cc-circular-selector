@@ -1,5 +1,5 @@
 //
-//  CircularSelectorLayer.h
+//  CCCircularSelector.h
 //  PuzzlePack
 //
 //  Created by Tang Eric on 05/03/2011.
@@ -17,19 +17,19 @@ typedef enum{
     kCCCircularSelectorDecelerationModeExponential
 } CCCircularSelectionDecelerationMode;
 
-@class CircularSelectorLayer;
+@class CCCircularSelector;
 
 @protocol CircularSelectorDelagateProtocol
 
--(void)rotationBegan:(CircularSelectorLayer*)circularSelector;
--(void)rotationEnded:(CircularSelectorLayer*)circularSelector;
--(void)selectionDidChange:(int)index circularSelector:(CircularSelectorLayer*)circularSelector;
--(void)selectionDidDecide:(int)index circularSelector:(CircularSelectorLayer*)circularSelector;
+-(void)rotationBegan:(CCCircularSelector*)circularSelector;
+-(void)rotationEnded:(CCCircularSelector*)circularSelector;
+-(void)selectionDidChange:(int)index circularSelector:(CCCircularSelector*)circularSelector;
+-(void)selectionDidDecide:(int)index circularSelector:(CCCircularSelector*)circularSelector;
 
 @end
 
 
-@interface CircularSelectorLayer : CCLayer {
+@interface CCCircularSelector : CCLayer {
     NSObject<CircularSelectorDelagateProtocol> *delegate_;
     CGPoint center_;
     BOOL isDragging_;
@@ -57,7 +57,7 @@ typedef enum{
 }
 
 
--(CircularSelectorLayer*)initWithChoices:(NSArray*)someChoices;
+-(CCCircularSelector*)initWithChoices:(NSArray*)someChoices;
 -(void)positionChoices;
 -(float)getAngleForChoice:(int)index;
 -(CGPoint)getNormalizedXZCoordinatesWithAngle:(float)theta;
