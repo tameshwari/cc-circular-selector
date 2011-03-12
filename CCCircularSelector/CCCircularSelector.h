@@ -45,6 +45,7 @@ typedef enum{
     float frontScale_, backScale_;
     float radiusX_, radiusY_;
     float rotationSpeedFactor_; // this factor affect the rate between drag distance and rotation angle
+    
     CCCircularSelectorRotationMode rotationMode_;
     
     // inertia related
@@ -80,12 +81,11 @@ typedef enum{
 @property (retain) NSObject<CCCircularSelectorDelagateProtocol> *delegate;
 @property (readonly) int selectionIndex;
 @property (readonly) NSArray *choices;
+
 @property (readwrite) CCCircularSelectorRotationMode rotationMode;
 
 @property (readwrite) CGPoint center;
 @property (readwrite) float frontScale, backScale;
-
-@property (assign) BOOL allowConfirmSelectByTap, allowRotateByTappingChoice, allowRotateByTappingSpace;
 
 @property (assign) float deceleration;
 @property (assign) CCCircularSelectorDecelerationMode decelerationMode;
