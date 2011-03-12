@@ -43,7 +43,7 @@ float radianToDegree(float radian){
     CCNode *tempNode;
     NSMutableArray *tempChoices = [NSMutableArray arrayWithCapacity:0];
     id tempChoice;
-    if (self = [super init]) {
+    if ((self = [super init])) {
         if (someChoices == nil) {
             NSLog(@"[CCCircularSelector initWithChoices] choices must not be nil");
             return nil;
@@ -329,7 +329,7 @@ float radianToDegree(float radian){
 
 - (void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event
 {
-    if (rotationMode_ & kCCCircularSelectorRotationModeDrag > 0) {
+    if ((rotationMode_ & kCCCircularSelectorRotationModeDrag) > 0) {
         if (!isDragging_ && delegate_ && [delegate_ respondsToSelector:@selector(rotationBegan:)]) {
             [delegate_ rotationBegan:self];
         }
@@ -361,7 +361,7 @@ float radianToDegree(float radian){
 - (void)ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event
 {
     if (isDragging_) {
-        if (rotationMode_ & kCCCircularSelectorRotationModeDrag > 0) {
+        if ((rotationMode_ & kCCCircularSelectorRotationModeDrag) > 0) {
             [self schedule:@selector(decelerate:)];
         }
         isDragging_ = NO;

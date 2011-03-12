@@ -79,6 +79,8 @@ typedef enum{
 -(void)rotateToTargetAngle:(ccTime)dt;
 -(void)stopInertia;
 
+-(void)tapped:(UITouch *)touch;
+
 -(void)rotateToIndex:(int)index;
 
 @property (retain) NSObject<CCCircularSelectorDelagateProtocol> *delegate;
