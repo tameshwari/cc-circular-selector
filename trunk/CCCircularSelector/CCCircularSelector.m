@@ -21,14 +21,13 @@ float radianToDegree(float radian){
 @synthesize delegate=delegate_;
 @synthesize selectionIndex=selectionIndex_;
 @synthesize choices=choices_;
+
 @synthesize rotationMode=rotationMode_;
 
 @synthesize center=center_;
 
 // property with explicit setters
 @synthesize frontScale=frontScale_, backScale=backScale_;
-
-@synthesize allowConfirmSelectByTap, allowRotateByTappingChoice, allowRotateByTappingSpace;
 
 @synthesize deceleration=deceleration_;
 @synthesize decelerationMode=decelerationMode_;
@@ -42,25 +41,24 @@ float radianToDegree(float radian){
     NSMutableArray *tempChoices = [NSMutableArray arrayWithCapacity:0];
     id tempChoice;
     if (self = [super init]) {
-        if (tempChoices == nil) {
+        if (someChoices == nil) {
             NSLog(@"[CCCircularSelector initWithChoices] choices must not be nil");
             return nil;
         }
-        if (tempChoices.count < 1) {
+        if (someChoices.count < 1) {
             NSLog(@"[CCCircularSelector initWithChoices] at least one choice should be provided");
             return nil;
         }
-        for (int i = 0; i < choices_.count; i++) {
-            tempChoice = [choices_ objectAtIndex:i];
+        for (int i = 0; i < someChoices.count; i++) {
+            tempChoice = [someChoices objectAtIndex:i];
             if ([tempChoice isKindOfClass:[CCNode class]]) {
-                [tempChoices addObject:tempChoice]; 
-                [self addChild:tempChoice];
+                tempNode = tempChoice;
             } else {
                 NSLog(@"[CCCircularSelector initWithChoices] choices %d is not a CCNode, we will replace it with a blank CCNode", i);
                 tempNode = [CCNode node];
-                [tempChoices addObject:tempNode];
-                [self addChild:tempNode];
             }
+            [tempChoices addObject:tempNode];
+            [self addChild:tempNode];
         }
         choices_ = [[NSArray alloc] initWithArray:tempChoices];
         
@@ -365,7 +363,6 @@ float radianToDegree(float radian){
 }
 
 -(void)tapped:(UITouch*)touch{
-    NSLog(@"tapped");
     CCNode *currentChoice = [choices_ objectAtIndex:selectionIndex_];
     CCNode *tempChoice, *tempTopChoice;
     if (CGRectContainsPoint(CGRectMake(currentChoice.position.x-currentChoice.contentSize.width*currentChoice.scaleX/2.0f, 
