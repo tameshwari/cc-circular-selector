@@ -21,6 +21,7 @@ float radianToDegree(float radian){
 @synthesize delegate=delegate_;
 @synthesize selectionIndex=selectionIndex_;
 @synthesize choices=choices_;
+@synthesize rotationMode=rotationMode_;
 
 @synthesize center=center_;
 
@@ -39,20 +40,27 @@ float radianToDegree(float radian){
 -(CCCircularSelector*)initWithChoices:(NSArray*)someChoices{
     CCNode *tempNode;
     NSMutableArray *tempChoices = [NSMutableArray arrayWithCapacity:0];
+    id tempChoice;
     if (self = [super init]) {
-        for (id choice in someChoices) {
-            if ([choice isKindOfClass:[CCNode class]]) {
-                [tempChoices addObject:choice]; 
-                [self addChild:choice];
-            }else {
-                tempNode = [CCNode node];
-                [tempChoices addObject:tempNode];
-                [self addChild:tempNode];
-            }
+        if (tempChoices == nil) {
+            NSLog(@"[CCCircularSelector initWithChoices] choices must not be nil");
+            return nil;
         }
         if (tempChoices.count < 1) {
             NSLog(@"[CCCircularSelector initWithChoices] at least one choice should be provided");
             return nil;
+        }
+        for (int i = 0; i < choices_.count; i++) {
+            tempChoice = [choices_ objectAtIndex:i];
+            if ([tempChoice isKindOfClass:[CCNode class]]) {
+                [tempChoices addObject:tempChoice]; 
+                [self addChild:tempChoice];
+            } else {
+                NSLog(@"[CCCircularSelector initWithChoices] choices %d is not a CCNode, we will replace it with a blank CCNode", i);
+                tempNode = [CCNode node];
+                [tempChoices addObject:tempNode];
+                [self addChild:tempNode];
+            }
         }
         choices_ = [[NSArray alloc] initWithArray:tempChoices];
         
@@ -61,9 +69,7 @@ float radianToDegree(float radian){
         angle_ = 0.0f;
         rotationSpeedFactor_ = 0.3f;
         
-        allowConfirmSelectByTap = YES;
-        allowRotateByTappingChoice = YES;
-        allowRotateByTappingSpace = YES;
+        rotationMode_ = kCCCircularSelectorRotationModeDrag | kCCCircularSelectorRotationModeTapItem | kCCCircularSelectorRotationModeTapLeftRight;
         
         center_ = CGPointZero;
         radiusX_ = self.contentSize.width * 0.35f;
@@ -304,7 +310,7 @@ float radianToDegree(float radian){
 
 - (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event
 {
-    if (YES){ //CGRectContainsPoint(CGRectMake(0.0f, 0.0f, size_.width, size_.height), [self convertTouchToNodeSpace:touch])) {
+    if (YES){
         // this touch is on this layer
         [self stopInertia];
         lastAngle_ = angle_;
@@ -317,55 +323,52 @@ float radianToDegree(float radian){
 
 - (void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event
 {
-    isDragging_ = YES;
-    NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
-    
-    if (delegate_ && [delegate_ respondsToSelector:@selector(dragBegan:)]) {
-        [delegate_ dragBegan:self];
-    }
-    if (delegate_ && [delegate_ respondsToSelector:@selector(rotationBegan:)]) {
-        [delegate_ rotationBegan:self];
-    }
-    
-    CGPoint touchPoint = [self convertTouchToNodeSpace:touch];
-    CGPoint prevTouchPoint = [self convertToNodeSpace:[[CCDirector sharedDirector] convertToGL: [touch previousLocationInView:[CCDirector sharedDirector].openGLView]]];
-    
-    angle_ = angle_+(touchPoint.x - prevTouchPoint.x)*rotationSpeedFactor_;
-    dTheta_ = (angle_ - lastAngle_)/(currentTime - lastAngleTime_);
-    if (MAX_ANGULAR_VELOCITY > 0.0f && fabsf(dTheta_) > MAX_ANGULAR_VELOCITY) {
-        if (dTheta_ > 0) {
-            dTheta_ = MAX_ANGULAR_VELOCITY;
-        } else {
-            dTheta_ = -MAX_ANGULAR_VELOCITY;
+    if (rotationMode_ & kCCCircularSelectorRotationModeDrag > 0) {
+        if (!isDragging_ && delegate_ && [delegate_ respondsToSelector:@selector(rotationBegan:)]) {
+            [delegate_ rotationBegan:self];
         }
-
+        NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
+        
+        
+        CGPoint touchPoint = [self convertTouchToNodeSpace:touch];
+        CGPoint prevTouchPoint = [self convertToNodeSpace:[[CCDirector sharedDirector] convertToGL: [touch previousLocationInView:[CCDirector sharedDirector].openGLView]]];
+        
+        angle_ = angle_+(touchPoint.x - prevTouchPoint.x)*rotationSpeedFactor_;
+        dTheta_ = (angle_ - lastAngle_)/(currentTime - lastAngleTime_);
+        if (MAX_ANGULAR_VELOCITY > 0.0f && fabsf(dTheta_) > MAX_ANGULAR_VELOCITY) {
+            if (dTheta_ > 0) {
+                dTheta_ = MAX_ANGULAR_VELOCITY;
+            } else {
+                dTheta_ = -MAX_ANGULAR_VELOCITY;
+            }
+            
+        }
+        
+        angle_ = [self correctAngle:angle_];
+        [self positionChoices];
+        lastAngle_ = angle_;
+        lastAngleTime_ = currentTime;
     }
-    
-    angle_ = [self correctAngle:angle_];
-    [self positionChoices];
-    lastAngle_ = angle_;
-    lastAngleTime_ = currentTime;
+    isDragging_ = YES;
 }
 
 - (void)ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event
 {
     if (isDragging_) {
-        if (delegate_ && [delegate_ respondsToSelector:@selector(dragEnded:)]) {
-            [delegate_ dragEnded:self];
+        if (rotationMode_ & kCCCircularSelectorRotationModeDrag > 0) {
+            [self schedule:@selector(decelerate:)];
         }
-        [self schedule:@selector(decelerate:)];
         isDragging_ = NO;
-        //[self schedule:@selector(snap:)];
-    }else {
+    } else {
         [self tapped:touch];
     }
 }
 
 -(void)tapped:(UITouch*)touch{
+    NSLog(@"tapped");
     CCNode *currentChoice = [choices_ objectAtIndex:selectionIndex_];
     CCNode *tempChoice, *tempTopChoice;
-    if (allowConfirmSelectByTap &&
-        CGRectContainsPoint(CGRectMake(currentChoice.position.x-currentChoice.contentSize.width*currentChoice.scaleX/2.0f, 
+    if (CGRectContainsPoint(CGRectMake(currentChoice.position.x-currentChoice.contentSize.width*currentChoice.scaleX/2.0f, 
                                        currentChoice.position.y-currentChoice.contentSize.height*currentChoice.scaleY/2.0f, 
                                        currentChoice.contentSize.width*currentChoice.scaleX,
                                        currentChoice.contentSize.height*currentChoice.scaleY)
@@ -392,12 +395,12 @@ float radianToDegree(float radian){
                 tempTopChoice = tempChoice;
             }
         }
-        if (allowRotateByTappingChoice && tempTopChoice) { // a specific choice is tapped
+        if (tempTopChoice && ((rotationMode_ & kCCCircularSelectorRotationModeTapItem) > 0)) { // a specific choice is tapped
             [self rotateToIndex:[choices_ indexOfObject:tempTopChoice]];
-        } else if (allowRotateByTappingSpace) { // empty space tapped, rotate left / right
-            if ([currentChoice convertTouchToNodeSpace:touch].x > currentChoice.contentSize.width*currentChoice.scaleX/2.0f) {
+        } else if ((rotationMode_ & kCCCircularSelectorRotationModeTapLeftRight) > 0) { // empty space tapped, rotate left / right
+            if ([self convertTouchToNodeSpace:touch].x > center_.x) {
                 [self rotateToIndex:(selectionIndex_+1)%choices_.count];
-            } else if ([currentChoice convertTouchToNodeSpace:touch].x < -currentChoice.contentSize.width*currentChoice.scaleX/2.0f) {
+            } else {
                 [self rotateToIndex:(selectionIndex_+choices_.count-1)%choices_.count];
             }
         }
