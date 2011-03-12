@@ -29,6 +29,7 @@ float radianToDegree(float radian){
 
 // property with explicit setters
 @synthesize frontScale=frontScale_, backScale=backScale_;
+@synthesize radiusX=radiusX_, radiusY=radiusY_;
 
 @synthesize deceleration=deceleration_;
 @synthesize decelerationMode=decelerationMode_;
@@ -120,8 +121,8 @@ float radianToDegree(float radian){
     for (i = 0; i < choices_.count; i++) {
         inserted = NO;
         for (j = 0; j < sortedChoices.count; j++) {
-            z1 = [self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:i]].y;
-            z2 = [self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:[[sortedChoices objectAtIndex:j] intValue]]].y;
+            z1 = [self getNormalizedXZCoordinatesForAngle:[self getAngleForChoice:i]].y;
+            z2 = [self getNormalizedXZCoordinatesForAngle:[self getAngleForChoice:[[sortedChoices objectAtIndex:j] intValue]]].y;
             if (z1 < z2) {
                 [sortedChoices insertObject:[NSNumber numberWithInt:i] atIndex:j];
                 inserted = YES;
@@ -142,7 +143,7 @@ float radianToDegree(float radian){
     float t;
     int i, j;
     for (i = 0; i < choices_.count; i++) {
-        xzPoint = [self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:i]];
+        xzPoint = [self getNormalizedXZCoordinatesForAngle:[self getAngleForChoice:i]];
         t = [self getTFromZ:xzPoint.y];
         choice = [choices_ objectAtIndex:i];
         choice.anchorPoint = ccp(0.5f, 0.5f);
@@ -154,7 +155,7 @@ float radianToDegree(float radian){
     sortedChoices = [self getSortedChoices];
     j = 0;
     for (i = 0; i < sortedChoices.count; i++) { // count the nodes with negative Z
-        if ([self getNormalizedXZCoordinatesWithAngle:[self getAngleForChoice:i]].y > 0) {
+        if ([self getNormalizedXZCoordinatesForAngle:[self getAngleForChoice:i]].y > 0) {
             j++;
         }
     }
@@ -174,7 +175,7 @@ float radianToDegree(float radian){
     return angle_+(360.0f*index/choices_.count);
 }
 
--(CGPoint)getNormalizedXZCoordinatesWithAngle:(float)theta{
+-(CGPoint)getNormalizedXZCoordinatesForAngle:(float)theta{
     // this method return x and z coordinates of the node
     return CGPointMake(sinf(degreeToRadian(theta)), cosf(degreeToRadian(theta)));
 }
@@ -203,6 +204,11 @@ float radianToDegree(float radian){
         angle += 360.0f;
     }
     return angle;
+}
+
+-(float)getAngleForTouchPoint:(CGPoint)point{
+    CGPoint normalizedPoint = ccp((point.x-center_.x)/radiusX_, (point.y-center_.y)/radiusY_);
+    return radianToDegree(atanf(-(normalizedPoint.x/normalizedPoint.y))) + (normalizedPoint.y>=0 ? 180.0f : 0.0f);
 }
 
 -(void)decelerate:(ccTime)dt{
@@ -299,8 +305,7 @@ float radianToDegree(float radian){
     [super onEnterTransitionDidFinish];
 }
 
-- (void)onExit
-{
+- (void)onExit{
 	[[CCTouchDispatcher sharedDispatcher] removeDelegate:self];
 	[super onExit];
 }
@@ -334,7 +339,7 @@ float radianToDegree(float radian){
         CGPoint touchPoint = [self convertTouchToNodeSpace:touch];
         CGPoint prevTouchPoint = [self convertToNodeSpace:[[CCDirector sharedDirector] convertToGL: [touch previousLocationInView:[CCDirector sharedDirector].openGLView]]];
         
-        angle_ = angle_+(touchPoint.x - prevTouchPoint.x)*rotationSpeedFactor_;
+        angle_ = angle_+[self getAngleForTouchPoint:touchPoint]-[self getAngleForTouchPoint:prevTouchPoint];
         dTheta_ = (angle_ - lastAngle_)/(currentTime - lastAngleTime_);
         if (MAX_ANGULAR_VELOCITY > 0.0f && fabsf(dTheta_) > MAX_ANGULAR_VELOCITY) {
             if (dTheta_ > 0) {
@@ -346,6 +351,7 @@ float radianToDegree(float radian){
         }
         
         angle_ = [self correctAngle:angle_];
+NSLog(@"angle: %f", angle_);
         [self positionChoices];
         lastAngle_ = angle_;
         lastAngleTime_ = currentTime;
@@ -417,6 +423,11 @@ float radianToDegree(float radian){
 
 -(void)setBackScale:(float)newBackScale{
     backScale_ = newBackScale;
+    [self positionChoices];
+}
+
+-(void)setCenter:(CGPoint)newCenter{
+    center_ = newCenter;
     [self positionChoices];
 }
 
