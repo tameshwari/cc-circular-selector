@@ -67,17 +67,19 @@ typedef enum{
 -(CCCircularSelector*)initWithChoices:(NSArray*)someChoices;
 -(void)positionChoices;
 -(float)getAngleForChoice:(int)index;
--(CGPoint)getNormalizedXZCoordinatesWithAngle:(float)theta;
+-(CGPoint)getNormalizedXZCoordinatesForAngle:(float)theta;
 -(float)getTFromZ:(float)z;
 -(float)getScaleFromT:(float)t;
 -(float)getYFromT:(float)t;
 -(float)correctAngle:(float)angle;
 -(CCNode*)getSelectedNode;
--(void)rotateToIndex:(int)index;
+-(float)getAngleForTouchPoint:(CGPoint)point;
 
 -(void)decelerate:(ccTime)dt;
 -(void)rotateToTargetAngle:(ccTime)dt;
 -(void)stopInertia;
+
+-(void)rotateToIndex:(int)index;
 
 @property (retain) NSObject<CCCircularSelectorDelagateProtocol> *delegate;
 @property (readonly) int selectionIndex;
@@ -88,6 +90,7 @@ typedef enum{
 
 @property (readwrite) CGPoint center;
 @property (readwrite) float frontScale, backScale;
+@property (readwrite) float radiusX, radiusY;
 
 @property (assign) float deceleration;
 @property (assign) CCCircularSelectorDecelerationMode decelerationMode;
