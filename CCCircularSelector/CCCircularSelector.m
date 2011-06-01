@@ -373,11 +373,10 @@ float radianToDegree(float radian){
 -(void)tapped:(UITouch*)touch{
     CCNode *currentChoice = [choices_ objectAtIndex:selectionIndex_];
     CCNode *tempChoice, *tempTopChoice;
-    if (CGRectContainsPoint(CGRectMake(currentChoice.position.x-currentChoice.contentSize.width*currentChoice.scaleX/2.0f, 
-                                       currentChoice.position.y-currentChoice.contentSize.height*currentChoice.scaleY/2.0f, 
-                                       currentChoice.contentSize.width*currentChoice.scaleX,
-                                       currentChoice.contentSize.height*currentChoice.scaleY)
-                            , [self convertTouchToNodeSpace:touch])) {
+    
+    // if the touch point is in the area of the node
+    // no need to scale the area even if the node is scaled, because the touch point relative to the node is already scaled
+    if (CGRectContainsPoint(CGRectMake(0, 0, currentChoice.contentSize.width,currentChoice.contentSize.height), [currentChoice convertTouchToNodeSpace:touch])) {
         // the selected choice is tapped
         if (delegate_ && [delegate_ respondsToSelector:@selector(selectionDidDecide:circularSelector:)]) {
             [delegate_ selectionDidDecide:selectionIndex_ circularSelector:self];
