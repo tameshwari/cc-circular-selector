@@ -1,0 +1,1 @@
+We have some coverflow-like UI on the internet, but most of them are based on UIKit, which it hard to integrate with Cocos2D. This new circular selector interface provides similar functions as coverflow, but is implemented native on Cocos2D.
